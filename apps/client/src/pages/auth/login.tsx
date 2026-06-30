@@ -61,7 +61,7 @@ export function LoginPage() {
       await signIn.email({
         email: data.email,
         password: data.password,
-        callbackURL: "/dashboard",
+        // callbackURL: "/dashboard",
         fetchOptions: {
           onSuccess: () => {
             toast.success("Logged in successfully");

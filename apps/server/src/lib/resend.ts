@@ -2,7 +2,7 @@ import { Resend } from "resend";
 
 export const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM_EMAIL = process.env.FROM_EMAIL || "StillUp Alert Support <support@stillup.sh>";
+const FROM_EMAIL = process.env.FROM_EMAIL || "StillUp Alert Support <alert@system.kushchaudhary.com>";
 
 interface DownAlertData {
   monitorName: string;
