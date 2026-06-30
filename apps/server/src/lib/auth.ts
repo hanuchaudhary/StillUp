@@ -19,7 +19,7 @@ export const auth = betterAuth({
         const emailHtml = resetPasswordEmailTemplate(url);
         await resend.emails
           .send({
-            from: "StillUp <support@stillup.sh>",
+            from: "StillUp <alert@stillup.sh>",
             to: user.email,
             subject: "Internal Password Reset Request",
             html: emailHtml,
@@ -41,7 +41,7 @@ export const auth = betterAuth({
         const emailHtml = verifyEmailTemplate(verifyUrl);
         await resend.emails
           .send({
-            from: "StillUp Verification <support@stillup.sh>",
+            from: "StillUp Verification <alert@system.kushchaudhary.com>",
             to: user.email,
             subject: "Verify your email address",
             html: emailHtml,
@@ -62,4 +62,8 @@ export const auth = betterAuth({
     "https://stillup.sh",
   ],
   plugins: [openAPI()],
+  logger: {
+    level: "info",
+    format: "pretty",
+  },
 });
