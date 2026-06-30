@@ -1,0 +1,29 @@
+{
+  "name": "@stillup/worker",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run ./index.ts",
+    "dev": "bun run --watch ./index.ts",
+    "start:us-east": "REGION=us-east bun run ./index.ts",
+    "start:eu-west": "REGION=eu-west bun run ./index.ts",
+    "start:ap-south": "REGION=ap-south bun run ./index.ts",
+    "dev:us-east": "REGION=us-east bun run --watch ./index.ts",
+    "dev:eu-west": "REGION=eu-west bun run --watch ./index.ts",
+    "dev:ap-south": "REGION=ap-south bun run --watch ./index.ts"
+  },
+  "dependencies": {
+    "@stillup/database": "*",
+    "@stillup/shared": "*",
+    "bullmq": "^5.71.1",
+    "dotenv": "^17.3.1",
+    "ioredis": "^5.10.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "StillUp - Website Uptime Monitoring",
+  "short_name": "StillUp",
+  "description": "Monitor website uptime, response times, and outages with fast alerts.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ef4444",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

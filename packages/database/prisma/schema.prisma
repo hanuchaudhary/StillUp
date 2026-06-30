@@ -1,0 +1,193 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id       String  @id @default(cuid())
+  email    String  @unique
+  name     String?
+  password String?
+
+  emailVerified Boolean @default(false)
+  image         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions     Session[]
+  accounts     Account[]
+  monitors     Monitor[]
+  subscription Subscription?
+  transactions Transaction[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  type                  String    @default("oauth")
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  password              String?
+  sessionState          String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Monitor {
+  id                String  @id @default(uuid())
+  name              String
+  url               String
+  isActive          Boolean @default(true)
+  performance       Boolean @default(false)
+  interval          Int
+  notificationEmail String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  regions String[]
+  checks  Check[]
+
+  state     MonitorState?
+  alertLogs AlertLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Check {
+  id           String         @id @default(uuid())
+  status       MONITOR_STATUS
+  responseTime Int
+  region       String
+  statusCode   Int
+  error        String?
+
+  monitorId String
+  monitor   Monitor @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([monitorId])
+}
+
+enum MONITOR_STATUS {
+  UP
+  DOWN
+  UNKNOWN
+}
+
+model MonitorState {
+  id                    String    @id @default(uuid())
+  monitorId             String    @unique
+  monitor               Monitor   @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  globalStatus          String    @default("UP")
+  consecutiveDownCycles Int       @default(0)
+  lastEvaluatedAt       DateTime  @default(now())
+  lastNotifiedAt        DateTime?
+
+  @@index([monitorId])
+}
+
+model AlertLog {
+  id        String  @id @default(uuid())
+  monitorId String
+  monitor   Monitor @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  type      String
+  email     String
+  success   Boolean
+  error     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([monitorId])
+}
+
+model Subscription {
+  id                   String    @id @default(uuid())
+  userId               String    @unique
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String    @unique
+  stripeSubscriptionId String?   @unique
+  stripePriceId        String?
+  status               SUBSCRIPTION_STATUS @default(INACTIVE)
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([stripeCustomerId])
+}
+
+model Transaction {
+  id                    String   @id @default(uuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripePaymentIntentId String?  @unique
+  stripeInvoiceId       String?  @unique
+  amount                Int
+  currency              String   @default("usd")
+  status                TRANSACTION_STATUS
+  description           String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+enum SUBSCRIPTION_STATUS {
+  ACTIVE
+  INACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+}
+
+enum TRANSACTION_STATUS {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
