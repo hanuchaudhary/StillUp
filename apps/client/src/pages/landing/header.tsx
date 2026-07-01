@@ -14,7 +14,9 @@ export function Header() {
     <header className="border-b font-geist">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between border-x">
         <Link to="/" className="flex items-center">
-          <Logo />
+          <Logo /> <span className="text-xs text-destructive font-montreal-mono pl-2 uppercase font-bold">
+            Paused
+          </span>
         </Link>
         <div className="flex items-center gap-3">
           <Button
