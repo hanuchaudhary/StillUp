@@ -24,7 +24,7 @@ export function PricingSection() {
           type={"crosses"}
           className={"bg-primary/50 w-full max-w-5xl"}
         >
-          <Heading className="font-montreal-regular font-normal text-neutral-800">
+          <Heading className="font-montreal-regular font-normal">
             StillUp Enterprise
           </Heading>
           <Price className="font-fustat font-normal">$5/mo</Price>
