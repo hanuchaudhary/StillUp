@@ -61,20 +61,8 @@ export function SubscriptionStatus({
   subscription,
   isPro,
 }: SubscriptionStatusProps) {
-  if (!subscription) {
-    return (
-      <Card className="border bg-card">
-        <CardHeader>
-          <CardTitle>Subscription Status</CardTitle>
-          <CardDescription>You are on the free plan</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">Free Plan</Badge>
-          </div>
-        </CardContent>
-      </Card>
-    );
+  if (!subscription || !isPro || subscription.status === "INACTIVE") {
+    return null;
   }
 
   const config = statusConfig[subscription.status];

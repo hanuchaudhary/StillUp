@@ -21,7 +21,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen font-fustat tracking-wide max-w-4xl mx-auto sm:border-x">
+    <div className="min-h-screen font-fustat tracking-wide max-w-5xl mx-auto sm:border-x">
       <Navbar />
       <main className="">{children}</main>
     </div>
