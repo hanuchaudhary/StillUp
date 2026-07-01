@@ -1,4 +1,13 @@
 import { cn } from '@/lib/utils'
+import { Link } from 'react-router-dom'
+
+export const ENTERPRISE_FEATURES = [
+  'Unlimited monitors',
+  '30-second check intervals',
+  'All 3 monitoring regions',
+  'Priority email alerts',
+  '365-day data retention',
+] as const
 
 const Wave = () => (
   <svg
@@ -32,9 +41,36 @@ const Cross = () => (
 export const PricingWrapper: React.FC<{
   children: React.ReactNode
   type?: 'waves' | 'crosses'
-onContact: () => void
+  contactHref?: string
   className?: string
-}> = ({ children, onContact, className, type = 'waves' }) => (
+  actionLabel?: string
+  onAction?: () => void
+  actionDisabled?: boolean
+  actionLoading?: boolean
+}> = ({
+  children,
+  contactHref,
+  className,
+  type = 'waves',
+  actionLabel = 'Start Premium',
+  onAction,
+  actionDisabled = false,
+  actionLoading = false,
+}) => {
+  const actionButton = (
+    <button
+      type="button"
+      onClick={onAction}
+      disabled={actionDisabled || actionLoading || !onAction}
+      className={
+        'h-12 w-full bg-white rounded-lg text-neutral-900 font-montreal-regular font-normal disabled:opacity-60 disabled:cursor-not-allowed'
+      }
+    >
+      {actionLoading ? 'Please wait...' : actionLabel}
+    </button>
+  )
+
+  return (
   <article
     className={cn(
       'min-h-[300px] h-[600px] max-h-[500px] max-w-sm w-full bg-purple-500 relative overflow-hidden rounded-2xl text-white',
@@ -48,11 +84,20 @@ onContact: () => void
     >
       {children}
       <div className={'w-full h-full flex items-end justify-end text-base'}>
-        <button onClick={onContact} className={'w-full h-fit'}>
-          <button className={'h-12 w-full bg-white rounded-lg text-neutral-900 font-bold'}>
-            Book a Demo
-          </button>
-        </button>
+        {onAction ? (
+          <div className={'w-full h-fit'}>{actionButton}</div>
+        ) : contactHref ? (
+          <Link to={contactHref} className={'w-full h-fit'}>
+            <button
+              type="button"
+              className={
+                'h-12 w-full bg-white rounded-lg text-neutral-900 font-montreal-regular font-normal'
+              }
+            >
+              {actionLabel}
+            </button>
+          </Link>
+        ) : null}
       </div>
     </span>
     {type === 'waves' && (
@@ -85,7 +130,8 @@ onContact: () => void
       </>
     )}
   </article>
-)
+  )
+}
 
 export const Heading: React.FC<{ children: React.ReactNode; className?: string }> = ({
   children,

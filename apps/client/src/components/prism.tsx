@@ -15,8 +15,13 @@ type PrismProps = {
     hoverStrength?: number;
     inertia?: number;
     bloom?: number;
+    /** Pause WebGL when scrolled out of view (default: true). */
     suspendWhenOffscreen?: boolean;
     timeScale?: number;
+    /** Internal render resolution multiplier, 0–1 (default: 0.55). Lower = faster. */
+    renderScale?: number;
+    /** Cap animation frame rate for continuous modes (default: 30). */
+    maxFps?: number;
 };
 
 const Prism: React.FC<PrismProps> = ({
@@ -33,8 +38,10 @@ const Prism: React.FC<PrismProps> = ({
     hoverStrength = 2,
     inertia = 0.05,
     bloom = 1,
-    suspendWhenOffscreen = false,
-    timeScale = 0.5
+    suspendWhenOffscreen = true,
+    timeScale = 0.5,
+    renderScale = 0.55,
+    maxFps = 30
 }) => {
     const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -61,7 +68,8 @@ const Prism: React.FC<PrismProps> = ({
         const HOVSTR = Math.max(0, hoverStrength || 1);
         const INERT = Math.max(0, Math.min(1, inertia || 0.12));
 
-        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        const internalScale = Math.max(0.25, Math.min(1, renderScale));
+        const dpr = Math.min(1.5, window.devicePixelRatio || 1) * internalScale;
         const renderer = new Renderer({
             dpr,
             alpha: transparent,
@@ -89,7 +97,7 @@ const Prism: React.FC<PrismProps> = ({
     `;
 
         const fragment = /* glsl */ `
-      precision highp float;
+      precision mediump float;
 
       uniform vec2  iResolution;
       uniform float iTime;
@@ -175,7 +183,7 @@ const Prism: React.FC<PrismProps> = ({
           wob = mat2(c0, c1, c2, c0);
         }
 
-        const int STEPS = 100;
+        const int STEPS = 64;
         for (int i = 0; i < STEPS; i++) {
           p = vec3(f, z);
           p.xz = p.xz * wob;
@@ -286,16 +294,28 @@ const Prism: React.FC<PrismProps> = ({
         };
 
         const NOISE_IS_ZERO = NOISE < 1e-6;
+        const frameInterval =
+            maxFps > 0 ? 1000 / Math.min(60, Math.max(1, maxFps)) : 0;
+        const prefersReducedMotion = window.matchMedia(
+            '(prefers-reduced-motion: reduce)'
+        ).matches;
         let raf = 0;
+        let lastFrameTime = 0;
+        let running = false;
         const t0 = performance.now();
         const startRAF = () => {
-            if (raf) return;
+            if (raf || !running) return;
             raf = requestAnimationFrame(render);
         };
         const stopRAF = () => {
             if (!raf) return;
             cancelAnimationFrame(raf);
             raf = 0;
+        };
+        const setRunning = (next: boolean) => {
+            running = next;
+            if (next) startRAF();
+            else stopRAF();
         };
 
         const rnd = () => Math.random();
@@ -348,10 +368,21 @@ const Prism: React.FC<PrismProps> = ({
         }
 
         const render = (t: number) => {
+            if (!running) {
+                raf = 0;
+                return;
+            }
+
+            if (frameInterval > 0 && t - lastFrameTime < frameInterval) {
+                raf = requestAnimationFrame(render);
+                return;
+            }
+            lastFrameTime = t;
+
             const time = (t - t0) * 0.001;
             program.uniforms.iTime.value = time;
 
-            let continueRAF = true;
+            let continueRAF: boolean = true;
 
             if (animationType === 'hover') {
                 const maxPitch = 0.6 * HOVSTR;
@@ -404,21 +435,37 @@ const Prism: React.FC<PrismProps> = ({
             __prismIO?: IntersectionObserver;
         }
 
+        const onVisibilityChange = () => {
+            if (document.hidden) stopRAF();
+            else if (running) startRAF();
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange);
+
         if (suspendWhenOffscreen) {
-            const io = new IntersectionObserver(entries => {
-                const vis = entries.some(e => e.isIntersecting);
-                if (vis) startRAF();
-                else stopRAF();
-            });
+            const io = new IntersectionObserver(
+                entries => {
+                    const vis = entries.some(e => e.isIntersecting);
+                    if (vis && !document.hidden) setRunning(true);
+                    else setRunning(false);
+                },
+                { rootMargin: '80px' }
+            );
             io.observe(container);
-            startRAF();
             (container as PrismContainer).__prismIO = io;
-        } else {
-            startRAF();
+        }
+
+        if (prefersReducedMotion) {
+            program.uniforms.iTime.value = 0;
+            setMat3FromEuler(0, 0, 0, rotBuf);
+            program.uniforms.uRot.value = rotBuf;
+            renderer.render({ scene: mesh });
+        } else if (!suspendWhenOffscreen) {
+            setRunning(true);
         }
 
         return () => {
-            stopRAF();
+            setRunning(false);
+            document.removeEventListener('visibilitychange', onVisibilityChange);
             ro.disconnect();
             if (animationType === 'hover') {
                 if (onPointerMove) window.removeEventListener('pointermove', onPointerMove as EventListener);
@@ -448,7 +495,9 @@ const Prism: React.FC<PrismProps> = ({
         hoverStrength,
         inertia,
         bloom,
-        suspendWhenOffscreen
+        suspendWhenOffscreen,
+        renderScale,
+        maxFps
     ]);
 
     return <div className="w-full h-full relative" ref={containerRef} />;

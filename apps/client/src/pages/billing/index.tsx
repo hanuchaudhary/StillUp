@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
+import { IconAsterisk } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CheckCircle2, CircleAlert } from "lucide-react";
 import { toast } from "sonner";
 
-import { PricingCard } from "@/components/billing/pricing-card";
 import { SubscriptionStatus } from "@/components/billing/subscription-status";
+import {
+  ENTERPRISE_FEATURES,
+  Heading,
+  Paragraph,
+  Price,
+  PricingWrapper,
+} from "@/components/pricing-card";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api";
 
@@ -80,7 +87,7 @@ export function BillingPage() {
               <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-emerald-500/20 blur-2xl" />
               <div className="relative flex items-start gap-3">
                 <CheckCircle2 className="h-5 w-5 text-emerald-500 mt-0.5" />
-                <div> 
+                <div>
                   <p className="font-semibold text-emerald-700 dark:text-emerald-300">
                     Subscription activated successfully
                   </p>
@@ -122,18 +129,41 @@ export function BillingPage() {
               subscription={data?.subscription ?? null}
               isPro={isPro}
             />
-
             <div>
               <h2 className="text-lg font-semibold mb-1">Plans</h2>
               <p className="text-sm text-muted-foreground mb-4">
-                Choose the plan that fits your monitoring needs.
+                {isPro
+                  ? "You're on StillUp Enterprise. Manage your subscription below."
+                  : "Upgrade to unlock faster checks, all regions, and priority alerts."}
               </p>
-              <PricingCard
-                isPro={isPro}
-                isLoading={isLoading}
-                onSubscribe={handleSubscribe}
-                onManage={handleManage}
-              />
+              <div className="w-full flex items-center justify-center">
+                <PricingWrapper
+                  type="crosses"
+                  className="bg-primary/50 w-full max-w-5xl"
+                  onAction={isPro ? handleManage : handleSubscribe}
+                  actionLabel={
+                    isPro ? "Manage Subscription" : "Start Premium"
+                  }
+                  actionDisabled={isLoading}
+                  actionLoading={isLoading}
+                >
+                  <Heading className="font-montreal-regular font-normal">
+                    StillUp Enterprise
+                  </Heading>
+                  <Price className="font-fustat font-normal">$5/mo</Price>
+                  <div className="flex flex-col gap-2">
+                    {ENTERPRISE_FEATURES.map((feature) => (
+                      <Paragraph
+                        key={feature}
+                        className="flex items-center gap-2 font-fustat font-normal"
+                      >
+                        <IconAsterisk className="size-5 text-primary-foreground font-bold" />{" "}
+                        {feature}
+                      </Paragraph>
+                    ))}
+                  </div>
+                </PricingWrapper>
+              </div>
             </div>
           </div>
         )}
